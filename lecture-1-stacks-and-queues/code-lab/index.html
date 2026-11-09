@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Lab · Stacks and Queues</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#f4f6f9; --grid:#dce3ee; --ink:#1b2230; --muted:#5b6577; --blue:#2552c9; --green:#13795b; --sticky:#ffe76a; --red:#b3261e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; color: var(--ink); font-size: 18px; line-height: 1.55;
+    background: var(--paper) linear-gradient(var(--grid) 1px, transparent 1px) -1px -1px / 40px 40px,
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px) -1px -1px / 40px 40px; }
+  main { max-width: 900px; margin: 0 auto; padding: 48px 28px 80px; }
+  .back { color: var(--blue); font-weight: 700; }
+  h1 { font: 800 clamp(40px, 6vw, 64px)/0.98 'Bricolage Grotesque', sans-serif; letter-spacing: -0.03em; margin: 18px 0 14px; }
+  .lede { color: var(--muted); font-size: 20px; margin: 0 0 28px; max-width: 62ch; }
+  h2 { font: 800 28px/1.15 'Bricolage Grotesque', sans-serif; margin: 0 0 10px; }
+  h3 { font: 800 21px 'Bricolage Grotesque', sans-serif; margin: 26px 0 6px; }
+  section { background: #fff; border: 2px solid var(--ink); border-radius: 4px; padding: 28px; margin-bottom: 28px; }
+  section > p { margin: 0 0 14px; }
+  .choose { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .choose a { display: block; background: #fff; border: 2px solid var(--grid); border-radius: 4px; padding: 16px 18px; color: var(--ink); text-decoration: none; }
+  .choose a:hover, .choose a:focus-visible { border-color: var(--blue); }
+  .choose b { display: block; color: var(--blue); font-size: 20px; }
+  .choose span { color: var(--muted); font-size: 16px; }
+  @media (max-width: 700px) { .choose { grid-template-columns: 1fr; } }
+  ol.steps { padding-left: 1.4em; margin: 0 0 8px; }
+  ol.steps > li { margin-bottom: 14px; }
+  ol.steps > li::marker { font-weight: 700; color: var(--blue); }
+  code { font-size: 0.9em; background: #e8ecf3; padding: 1px 5px; border-radius: 3px; }
+  .cmdwrap { position: relative; margin: 8px 0 6px; }
+  pre.cmd { background: var(--ink); color: #fff; padding: 16px 18px; padding-right: 90px; border-radius: 4px; overflow-x: auto; margin: 0; font-size: 15px; }
+  pre.cmd code { background: none; padding: 0; }
+  pre.json { max-height: 420px; }
+  pre.pic { background: #fff; border: 2px solid var(--grid); border-radius: 4px; padding: 14px 18px; overflow-x: auto; font-size: 15px; margin: 8px 0 14px; }
+  .copy { position: absolute; top: 10px; right: 10px; font: 700 14px 'Atkinson Hyperlegible'; padding: 6px 12px; border-radius: 4px; border: 0; background: var(--sticky); color: var(--ink); cursor: pointer; }
+  .note { margin: 10px 0 0; padding: 14px 18px; background: var(--sticky); transform: rotate(-0.4deg); }
+  .req { border: 2px solid var(--grid); border-radius: 4px; padding: 16px 18px; margin: 14px 0; }
+  .req h3 { margin: 0 0 8px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .method { font: 700 15px 'Atkinson Hyperlegible'; color: #fff; background: var(--blue); padding: 2px 8px; border-radius: 3px; }
+  .method.post { background: var(--green); }
+  .req dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; }
+  .req dt { font-weight: 700; color: var(--muted); }
+  .req dd { margin: 0; overflow-wrap: anywhere; }
+  .expect { color: var(--green); font-weight: 700; }
+  .bad { color: var(--red); font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { font-size: 15px; color: var(--muted); }
+  .dl { display: inline-block; background: var(--sticky); color: var(--ink); font-weight: 700; text-decoration: none; padding: 12px 18px; border-radius: 4px; margin: 4px 0 10px; }
+  details { margin-top: 10px; } summary { cursor: pointer; font-weight: 700; color: var(--blue); }
+  a { color: var(--blue); }
+  a:focus-visible, summary:focus-visible, .copy:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+  pre.see { background: #fff; border: 2px solid var(--grid); border-left: 8px solid var(--green); border-radius: 4px; padding: 12px 16px; overflow-x: auto; font-size: 15px; margin: 6px 0 12px; }
+  pre.see .e { color: var(--red); white-space: pre-wrap; }
+  .label { font-weight: 700; color: var(--green); font-size: 15px; margin-top: 6px; }
+  .os { display: grid; grid-template-columns: 1fr; gap: 0 20px; }
+  .os h4 { margin: 6px 0 2px; font-size: 16px; }
+  @media (max-width: 700px) { .os { grid-template-columns: 1fr; } }
+  section h2 .n { color: var(--blue); }
+  td code { overflow-wrap: anywhere; }
+  .os > div, ol.steps > li { min-width: 0; }
+  @media (max-width: 700px) { table { display: block; overflow-x: auto; } section { padding: 18px; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="../../">← Stacks and Queues home</a>
+  <h1>Code Lab: stacks and queues</h1>
+  <p class="lede">Type along with the lecture. You build a Stack and a Queue class, watch Python's own call stack, and time a slow queue. Under each run is what real Python 3 prints.</p>
+
+  <div class="choose">
+    <a href="#s1"><b>In class</b><span>Sections 1–4 follow the slides.</span></a>
+    <a href="#breaks"><b>Something broke?</b><span>Jump to the table at the bottom.</span></a>
+  </div>
+
+  <section>
+    <h2>Before you start</h2>
+    <ol class="steps">
+      <li>Make a folder and open it:
+        <div class="cmdwrap"><pre class="cmd"><code>mkdir stacks-and-queues
+cd stacks-and-queues
+code .</code></pre><button type="button" class="copy">Copy</button></div></li>
+      <li>Check Python: <code>python3 --version</code> should say 3.something.</li>
+      <li>Type each block yourself, under the block before it. Copy only if you fall behind.</li>
+    </ol>
+  </section>
+
+  <section id="s1">
+    <h2><span class="n">1 ·</span> Same three items, two different &quot;next&quot;
+  
+    Undo (Ctrl+Z)type → bold → colourCtrl+Z undoes colour first: the newest action
+    The coffee shop lineMaria → Sam → AlexThe barista serves Maria first: the oldest in line
+  
+  A stack hands back the newest. A queue hands back the oldest.
+  
+    The plan: The hook: undo gives back the newest thing, a coffee line serves the oldest. Those are a stack and a queue.
+    Ask chat: &quot;You typed a word, made it bold, then changed its colour. You press Ctrl+Z once. What changes back?&quot; → the colour.
+    Ask: &quot;Maria, then Sam, then Alex get in line. Who is served first?&quot; → Maria.
+    Say: &quot;Same idea, three items in order. The only difference is which end the next item comes from.&quot;
+  
+
+
+
+  Why not just use a list?
+  
+    A list lets you take any item: items[3], items.remove(&quot;x&quot;)
+    Some data must come out in a strict order, or things break
+    Undo in the wrong order would undo your first change, not your last
+    A stack or queue restricts how items go in and come out
+  
+  Don&#x27;t ask &quot;which item do I want?&quot; Ask &quot;which item is next, by the rules?&quot;
+  
+    The plan: Why these exist: they take away freedom on purpose, so data always comes out in the right order.
+    Say: &quot;The rule is the feature. If the code can&#x27;t grab an item from the middle, nobody can break the order by mistake.&quot;
+    Inside, both are still a normal Python list. The class just hides it and gives you only the allowed moves.
+  
+
+
+
+
+  A stack: last in, first out (LIFO)
+  
+    
+      
+    
+    
+      Also called FILO: first in, last out. Like a stack of plates: you only touch the top.
+      
+        Undo / redo
+        The call stack (Python tracks function calls this way)
+        Backtracking (a maze: go back to the last fork)
+        Syntax parsing (does every ( have its )?)
+      
+    
+  
+  Push on the top, pop off the top. Nothing else.
+  
+    The plan: What a stack is: you only ever add to and take from the top.
+    Point at the picture: &quot;addTop puts a value on the pile. rmTop takes the top one off. The middle and the bottom can&#x27;t be reached.&quot;
+    Say: &quot;Two names for the same rule: LIFO, last in first out, and FILO, first in last out. The curriculum uses FILO.&quot;
+    The common words are push (add on top) and pop (take off the top). The curriculum&#x27;s methods are addTop and removeTop; the homework uses push and pop.
+    Syntax parsing is the homework&#x27;s LeetCode problem (Valid Parentheses). Don&#x27;t solve it now.
+  
+
+
+
+  Build a Stack class</h2>
+    <p>The curriculum's Stack class in <code>stacks.py</code>, used as an undo history in <code>undo.py</code>. The last run shows what happens when you remove from an empty stack.</p>
+    <p>New files: <code>stacks.py</code>, <code>undo.py</code> (same folder)</p>
+    <p class="label">Step 1 · stacks.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>class Stack:
+    def __init__(self):
+        self._items = []</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 2 · stacks.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>    def addTop(self, item):
+        self._items.append(item)</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 3 · stacks.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>    def removeTop(self):
+        if not self._items:
+            raise Exception(&quot;Stack is empty&quot;)
+        return self._items.pop()</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 4 · stacks.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>    def peek(self):
+        if not self._items:
+            raise Exception(&quot;Stack is empty&quot;)
+        return self._items[-1]</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 5 · undo.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>from stacks import Stack
+
+history = Stack()
+history.addTop(&quot;type Hello&quot;)
+history.addTop(&quot;make it bold&quot;)
+history.addTop(&quot;change the colour&quot;)
+print(history.peek())
+print(history.removeTop())
+print(history.peek())</code></pre><button type="button" class="copy">Copy</button></div>
+    <p>Save, then run it:</p>
+    <div class="cmdwrap"><pre class="cmd"><code>python3 undo.py</code></pre><button type="button" class="copy">Copy</button></div>
+    <pre class="see">change the colour
+change the colour
+make it bold</pre>
+    <p class="label">Step 6 · undo.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>empty = Stack()
+empty.removeTop()</code></pre><button type="button" class="copy">Copy</button></div>
+    <p>Save, then run it:</p>
+    <div class="cmdwrap"><pre class="cmd"><code>python3 undo.py</code></pre><button type="button" class="copy">Copy</button></div>
+    <pre class="see">change the colour
+change the colour
+make it bold
+<span class="e">Traceback (most recent call last):
+  File &quot;undo.py&quot;, line 12, in &lt;module&gt;
+    empty.removeTop()
+    ~~~~~~~~~~~~~~~^^
+  File &quot;stacks.py&quot;, line 10, in removeTop
+    raise Exception(&quot;Stack is empty&quot;)
+Exception: Stack is empty</span></pre>
+  </section>
+  <section id="s2">
+    <h2><span class="n">2 ·</span> Python&#x27;s own stack: the call stack</h2>
+    <p>Three functions that call each other. The finish order, and then the traceback, show Python's call stack.</p>
+    <p>New file: <code>call_stack.py</code> (same folder)</p>
+    <p class="label">Step 1 · call_stack.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>def a():
+    print(&quot;a starts&quot;)
+    b()
+    print(&quot;a ends&quot;)
+
+def b():
+    print(&quot;b starts&quot;)
+    c()
+    print(&quot;b ends&quot;)
+
+def c():
+    print(&quot;c starts&quot;)
+    print(&quot;c ends&quot;)
+
+a()</code></pre><button type="button" class="copy">Copy</button></div>
+    <p>Save, then run it:</p>
+    <div class="cmdwrap"><pre class="cmd"><code>python3 call_stack.py</code></pre><button type="button" class="copy">Copy</button></div>
+    <pre class="see">a starts
+b starts
+c starts
+c ends
+b ends
+a ends</pre>
+    <p class="label">Step 2 · call_stack.py: change <code>print(&quot;c starts&quot;)</code> to</p>
+    <div class="cmdwrap"><pre class="cmd"><code>print(&quot;c starts&quot;)
+    print(10 / 0)</code></pre><button type="button" class="copy">Copy</button></div>
+    <p>Save, then run it:</p>
+    <div class="cmdwrap"><pre class="cmd"><code>python3 call_stack.py</code></pre><button type="button" class="copy">Copy</button></div>
+    <pre class="see">a starts
+b starts
+c starts
+<span class="e">Traceback (most recent call last):
+  File &quot;call_stack.py&quot;, line 16, in &lt;module&gt;
+    a()
+    ~^^
+  File &quot;call_stack.py&quot;, line 3, in a
+    b()
+    ~^^
+  File &quot;call_stack.py&quot;, line 8, in b
+    c()
+    ~^^
+  File &quot;call_stack.py&quot;, line 13, in c
+    print(10 / 0)
+          ~~~^~~
+ZeroDivisionError: division by zero</span></pre>
+  </section>
+  <section id="s3">
+    <h2><span class="n">3 ·</span> A queue: first in, first out (FIFO)
+  Like a coffee shop line: join at the back, get served from the front. Nobody skips.
+  
+    front ←
+    Maria[0]
+    Sam[1]
+    Alex[2]
+    ← back
+  
+  
+    addRight joins at the back (right) · removeLeft serves the front (index 0)
+    Task scheduling and request handling (in the order they arrive)
+    Message brokers (messages wait their turn) · Breadth-first search
+  
+  A queue is fair: the oldest item always goes next.
+  
+    The plan: What a queue is: add at the back, take from the front, so the oldest item always goes next.
+    Point at the boxes: &quot;This is the Python list inside our Queue. Index 0, Maria, is the front of the line. New people join on the right.&quot;
+    Common words: enqueue (join the line) and dequeue (leave the front). The curriculum calls them addRight and removeLeft; the homework uses enqueue and dequeue.
+    Breadth-first search comes back in a future lecture (trees). Just name it.
+    The curriculum&#x27;s queue picture is on the class site (diagram gallery); this slide draws the same thing as the Python list.
+  
+
+
+
+  Build a Queue class</h2>
+    <p>The curriculum's Queue class in <code>queues.py</code>, serving a coffee shop line in <code>coffee.py</code>.</p>
+    <p>New files: <code>queues.py</code>, <code>coffee.py</code> (same folder)</p>
+    <p class="label">Step 1 · queues.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>class Queue:
+    def __init__(self):
+        self._items = []</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 2 · queues.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>    def addRight(self, item):
+        self._items.append(item)</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 3 · queues.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>    def removeLeft(self):
+        if not self._items:
+            raise Exception(&quot;Queue is empty&quot;)
+        return self._items.pop(0)</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 4 · queues.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>    def peek(self):
+        if not self._items:
+            raise Exception(&quot;Queue is empty&quot;)
+        return self._items[0]</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 5 · coffee.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>from queues import Queue
+
+line = Queue()
+line.addRight(&quot;Maria&quot;)
+line.addRight(&quot;Sam&quot;)
+line.addRight(&quot;Alex&quot;)
+print(line.peek())
+print(line.removeLeft())
+print(line.peek())</code></pre><button type="button" class="copy">Copy</button></div>
+    <p>Save, then run it:</p>
+    <div class="cmdwrap"><pre class="cmd"><code>python3 coffee.py</code></pre><button type="button" class="copy">Copy</button></div>
+    <pre class="see">Maria
+Maria
+Sam</pre>
+  </section>
+  <section id="s4">
+    <h2><span class="n">4 ·</span> pop(0) is slow: everyone shifts left
+  
+    before
+    Maria[0]
+    Sam[1]
+    Alex[2]
+    Jo[3]
+  
+  ← ← ← every item moves one seat
+  
+    after
+    Sam[0]
+    Alex[1]
+    Jo[2]
+  
+  
+    pop() takes the last item: nothing moves, O(1)
+    pop(0) takes the first item: n − 1 items move, O(n)
+    We use pop(0) on purpose: it keeps the queue easy to read. Real code uses collections.deque and popleft(): O(1)
+  
+  Same answer, different cost. Fine for 10 people, slow for a million.
+  
+    The plan: Why pop(0) is slow: removing the first item makes every other item move one seat. We keep it anyway, to keep the class simple.
+    Point at the red box: &quot;Maria leaves. A Python list has no empty seats, so Sam, Alex and Jo each move left. With a million people, that&#x27;s a million moves to serve one person.&quot;
+    
+      callitems that moveBig-O
+      append(x)noneO(1)
+      pop()noneO(1)
+      pop(0)all the othersO(n)
+      deque.popleft()noneO(1)
+    
+    Say: &quot;We keep pop(0) today and in the homework so the class reads like the picture. Just know it&#x27;s O(n). If you ever need a real queue in Python, use deque.&quot; Students may use either in the homework.
+    A deque (&quot;deck&quot;) is a double-ended queue: fast to add or remove at both ends.
+  
+
+
+
+  How slow is pop(0)? Time it</h2>
+    <p>Empty a long line with <code>pop(0)</code>, then with a <code>deque</code>, and time both. Your seconds will differ; the pattern (double the people, about 4 times the time for <code>pop(0)</code>) stays.</p>
+    <p>New file: <code>speed.py</code> (same folder)</p>
+    <p class="label">Step 1 · speed.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>import time
+from collections import deque
+
+for n in [25_000, 50_000, 100_000]:
+    line = list(range(n))
+    start = time.perf_counter()
+    while line:
+        line.pop(0)
+    slow = time.perf_counter() - start</code></pre><button type="button" class="copy">Copy</button></div>
+    <p class="label">Step 2 · speed.py</p>
+    <div class="cmdwrap"><pre class="cmd"><code>    line = deque(range(n))
+    start = time.perf_counter()
+    while line:
+        line.popleft()
+    fast = time.perf_counter() - start
+    print(f&quot;{n:&gt;7} people   pop(0): {slow:.3f}s   popleft: {fast:.3f}s&quot;)</code></pre><button type="button" class="copy">Copy</button></div>
+    <p>Save, then run it:</p>
+    <div class="cmdwrap"><pre class="cmd"><code>python3 speed.py</code></pre><button type="button" class="copy">Copy</button></div>
+    <pre class="see">  25000 people   pop(0): 0.036s   popleft: 0.001s
+  50000 people   pop(0): 0.146s   popleft: 0.003s
+ 100000 people   pop(0): 0.624s   popleft: 0.005s</pre>
+  </section>
+
+  <section id="breaks">
+    <h2>When something breaks</h2>
+    <table>
+      <tr><th>You see</th><th>It means</th><th>Fix</th></tr>
+      <tr><td><code>python3: command not found</code></td><td>Python isn't installed, or it's called <code>python</code> on your laptop</td><td>Try <code>python stacks.py</code>; or install Python 3</td></tr>
+      <tr><td><code>can't open file … stacks.py</code></td><td>You're in a different folder</td><td><code>cd stacks-and-queues</code>, then run again</td></tr>
+      <tr><td><code>IndentationError</code></td><td>The spaces at the start of a line don't line up</td><td>Methods sit 4 spaces in, under <code>class</code>; their code sits 8 spaces in</td></tr>
+      <tr><td><code>AttributeError: 'Stack' object has no attribute 'addTop'</code></td><td>The method isn't inside the class</td><td>Indent <code>def addTop</code> 4 spaces, like <code>def __init__</code></td></tr>
+      <tr><td><code>TypeError: … takes 1 positional argument but 2 were given</code></td><td><code>self</code> is missing</td><td>Every method starts with <code>self</code>: <code>def addTop(self, item):</code></td></tr>
+      <tr><td><code>Exception: Stack is empty</code></td><td>You removed or peeked with nothing in it</td><td>That's the check doing its job. Add an item first</td></tr>
+      <tr><td>The stack gives the oldest item</td><td><code>pop(0)</code> in the stack</td><td>The stack uses <code>pop()</code> with no number: the last item</td></tr>
+      <tr><td><code>ModuleNotFoundError: No module named 'stacks'</code></td><td><code>undo.py</code> can't find <code>stacks.py</code></td><td>Both files in the same folder, and run from that folder. The import is the file name without <code>.py</code></td></tr>
+      <tr><td>Odd errors about <code>queue</code> or <code>threading</code></td><td>Your file is called <code>queue.py</code> and hides Python's own <code>queue</code> module</td><td>Name it <code>queues.py</code></td></tr>
+      <tr><td>The output didn't change after your edit</td><td>The file isn't saved</td><td>A dot on the tab = unsaved. Ctrl+S, run again</td></tr>
+    </table>
+  </section>
+
+</main>
+<script>
+  document.querySelectorAll('.copy').forEach((b) => b.onclick = async () => {
+    await navigator.clipboard.writeText(b.previousElementSibling.innerText.trim()); b.textContent = 'Copied'; setTimeout(() => (b.textContent = 'Copy'), 1500)
+  })
+</script>
+</body>
+</html>

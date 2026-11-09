@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stacks and Queues</title>
+<link rel="stylesheet" href="../shared/deck.css">
+<link rel="stylesheet" href="../shared/codepad.css?v=1">
+<style>
+  .race { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 8px; }
+  .race .card h3 { font-size: 32px; }
+  .race p { font-size: 26px; margin: 6px 0 0; }
+  .race .order { font: 600 30px/1.5 'JetBrains Mono', monospace; margin: 12px 0 4px; }
+  .pic { display: grid; grid-template-columns: 1.05fr 1fr; gap: 36px; align-items: center; }
+  .pic img { width: 100%; border-radius: 10px; background: #fff; }
+  .pic ul { font-size: 26px; }
+  /* A Python list drawn as boxes: index 0 on the left */
+  .boxes { display: flex; gap: 10px; align-items: flex-start; margin: 6px 0; }
+  .boxes .b { width: 150px; text-align: center; }
+  .boxes .b div { font: 700 26px/1 'JetBrains Mono', monospace; padding: 22px 0; border: 3px solid #1b2230; border-radius: 10px; background: #e3f4ec; }
+  .boxes .b.go div { background: #fde2e2; border-color: #d64545; }
+  .boxes .b.new div { background: #fff6c8; border-color: #c49a00; }
+  .boxes .b span { display: block; font: 600 20px 'JetBrains Mono', monospace; color: #5b6577; margin-top: 6px; }
+  .boxes .lbl { font: 700 22px Inter, system-ui, sans-serif; color: #1b2230; width: 150px; padding-top: 24px; }
+  .shift { font: 700 30px 'JetBrains Mono', monospace; color: #d64545; margin: 2px 0 2px 170px; }
+  .trace td, .trace th { font-size: 22px; }
+  .trace td:nth-child(2), .trace td:nth-child(3), .trace td:nth-child(4), .trace td:nth-child(5) { font-family: 'JetBrains Mono', monospace; }
+  .docs { display: flex; flex-direction: column; gap: 10px; }
+  .docs-tabs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .docs-tabs button { font: 600 19px/1 Inter, system-ui, sans-serif; padding: 9px 14px; border-radius: 8px; border: 2px solid #1b2230; background: #fff; color: #1b2230; cursor: pointer; }
+  .docs-tabs button.on { background: #1b2230; color: #fff; }
+  .docs-tabs a { margin-left: auto; font: 600 18px Inter, system-ui, sans-serif; color: #2552c9; }
+  .docs iframe { width: 100%; height: 560px; border: 2px solid #1b2230; border-radius: 10px; background: #fff; }
+  .docs .url { font: 500 17px 'JetBrains Mono', monospace; color: #5b6577; }
+  .names td, .names th { font-size: 21px; }
+  .names td { font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body data-minutes="40">
+<div class="stage">
+
+<!-- ============ OPEN (0–5) ============ -->
+<section class="slide title" data-seg="Open" data-at="0">
+  <div class="kicker">Data Structures &amp; Algorithms · Stacks and Queues</div>
+  <h1>Who goes next?</h1>
+  <p class="sub">Stacks and queues are lists with <b>one rule</b> about which item comes out next. We build both in Python, live.</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Today we build two small Python classes that decide which item comes out next: a stack and a queue.</p>
+    <p><b>Before class</b> (demo-kit/RUNBOOK.md): this deck open in <b>Chrome</b> with internet (the editor and Python load once). In your own terminal: <code>python3 --version</code>.</p>
+    <p>Press <b>T</b>. Students: open VS Code and a terminal, <code>mkdir stacks-and-queues</code>, <code>cd stacks-and-queues</code>, <code>code .</code></p>
+    <p><b>The code slides are a real editor.</b> Type live (each slide's notes have <b>TYPE THIS</b>), <b>Ctrl+S</b> saves, then click the terminal and type the command. <b>Backup:</b> <b>N</b> types the next chunk, <b>R</b> runs it.</p>
+  </aside>
+</section>
+
+<section class="slide statement" data-seg="Open" data-at="1">
+  <h2>Same three items, two different "next"</h2>
+  <div class="race">
+    <div class="card blue"><h3>Undo (Ctrl+Z)</h3><div class="order">type → bold → colour</div><p>Ctrl+Z undoes <b>colour</b> first: the <b>newest</b> action</p></div>
+    <div class="card green"><h3>The coffee shop line</h3><div class="order">Maria → Sam → Alex</div><p>The barista serves <b>Maria</b> first: the <b>oldest</b> in line</p></div>
+  </div>
+  <p class="bottomline">A stack hands back the newest. A queue hands back the oldest.</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> The hook: undo gives back the newest thing, a coffee line serves the oldest. Those are a stack and a queue.</p>
+    <p>Ask chat: "You typed a word, made it bold, then changed its colour. You press Ctrl+Z once. What changes back?" → the <b>colour</b>.</p>
+    <p>Ask: "Maria, then Sam, then Alex get in line. Who is served first?" → <b>Maria</b>.</p>
+    <p>Say: "Same idea, three items in order. The only difference is <b>which end</b> the next item comes from."</p>
+  </aside>
+</section>
+
+<section class="slide" data-seg="Why?" data-at="3">
+  <h2>Why not just use a list?</h2>
+  <ul>
+    <li>A list lets you take <b>any</b> item: <code>items[3]</code>, <code>items.remove("x")</code></li>
+    <li>Some data must come out in a <b>strict order</b>, or things break</li>
+    <li>Undo in the wrong order would undo your first change, not your last</li>
+    <li>A stack or queue <b>restricts</b> how items go in and come out</li>
+  </ul>
+  <p class="bottomline">Don't ask "which item do I want?" Ask "which item is next, by the rules?"</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Why these exist: they take away freedom on purpose, so data always comes out in the right order.</p>
+    <p>Say: "The rule is the feature. If the code <b>can't</b> grab an item from the middle, nobody can break the order by mistake."</p>
+    <p>Inside, both are still a normal Python list. The class just hides it and gives you only the allowed moves.</p>
+  </aside>
+</section>
+
+<!-- ============ STACKS (5–17) ============ -->
+<section class="slide" data-seg="Stacks" data-at="5">
+  <h2>A stack: last in, first out (LIFO)</h2>
+  <div class="pic">
+    <div>
+      <img src="../diagrams/SQ1-01-stack.png" alt="A stack: addTop puts a value on top of the pile; rmTop takes the top value off. Only the top can be reached.">
+    </div>
+    <div>
+      <p style="font-size:26px;margin:0 0 10px">Also called <b>FILO</b>: first in, last out. Like a stack of plates: you only touch the <b>top</b>.</p>
+      <ul class="small">
+        <li><b>Undo / redo</b></li>
+        <li>The <b>call stack</b> (Python tracks function calls this way)</li>
+        <li><b>Backtracking</b> (a maze: go back to the last fork)</li>
+        <li><b>Syntax parsing</b> (does every <code>(</code> have its <code>)</code>?)</li>
+      </ul>
+    </div>
+  </div>
+  <p class="bottomline">Push on the top, pop off the top. Nothing else.</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> What a stack is: you only ever add to and take from the top.</p>
+    <p>Point at the picture: "<b>addTop</b> puts a value on the pile. <b>rmTop</b> takes the top one off. The middle and the bottom can't be reached."</p>
+    <p>Say: "Two names for the same rule: <b>LIFO</b>, last in first out, and <b>FILO</b>, first in last out. The curriculum uses FILO."</p>
+    <p>The common words are <b>push</b> (add on top) and <b>pop</b> (take off the top). The curriculum's methods are <code>addTop</code> and <code>removeTop</code>; the homework uses <code>push</code> and <code>pop</code>.</p>
+    <p>Syntax parsing is the homework's LeetCode problem (Valid Parentheses). Don't solve it now.</p>
+  </aside>
+</section>
+
+<section class="slide pad" data-seg="Code along: a Stack class" data-at="7">
+  <h2>Build a Stack class <span class="say">stacks.py · undo.py</span></h2>
+  <div class="vscode" data-folder="stacks-and-queues" data-terminal="one" data-term-lines="9" data-cols="1fr 1fr" data-run="python3 undo.py">
+<script type="text/plain" data-file="stacks.py" data-step>class Stack:
+    def __init__(self):
+        self._items = []</script>
+<script type="text/plain" data-file="stacks.py" data-step>
+    def addTop(self, item):
+        self._items.append(item)</script>
+<script type="text/plain" data-file="stacks.py" data-step>
+    def removeTop(self):
+        if not self._items:
+            raise Exception("Stack is empty")
+        return self._items.pop()</script>
+<script type="text/plain" data-file="stacks.py" data-step>
+    def peek(self):
+        if not self._items:
+            raise Exception("Stack is empty")
+        return self._items[-1]</script>
+<script type="text/plain" data-file="undo.py" data-step>from stacks import Stack
+
+history = Stack()
+history.addTop("type Hello")
+history.addTop("make it bold")
+history.addTop("change the colour")
+print(history.peek())
+print(history.removeTop())
+print(history.peek())</script>
+<script type="text/plain" data-file="undo.py" data-step>
+empty = Stack()
+empty.removeTop()</script>
+  </div>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> We write stacks.py: a Stack class with addTop, removeTop and peek. Then undo.py uses it as an undo history.</p>
+    <p><b>** CODE ALONG, about 7 minutes. **</b> Students: a new file <code>stacks.py</code> for the class, then <code>undo.py</code> to use it.</p>
+    <div class="typecode"><p class="th">TYPE THIS, in order</p>
+    <p class="tf"><b>stacks.py</b> · part 1: the class</p>
+    <pre>class Stack:
+    def __init__(self):
+        self._items = []</pre>
+    <p class="tf">part 2: addTop (inside the class, 4 spaces)</p>
+    <pre>    def addTop(self, item):
+        self._items.append(item)</pre>
+    <p class="tf">part 3: removeTop</p>
+    <pre>    def removeTop(self):
+        if not self._items:
+            raise Exception("Stack is empty")
+        return self._items.pop()</pre>
+    <p class="tf">part 4: peek</p>
+    <pre>    def peek(self):
+        if not self._items:
+            raise Exception("Stack is empty")
+        return self._items[-1]</pre>
+    <p class="tf">part 5: a new file, <b>undo.py</b></p>
+    <pre>from stacks import Stack
+
+history = Stack()
+history.addTop("type Hello")
+history.addTop("make it bold")
+history.addTop("change the colour")
+print(history.peek())
+print(history.removeTop())
+print(history.peek())</pre>
+    <p class="tf"><b>Ctrl+S</b> both files, then:</p><pre>python3 undo.py</pre>
+    <p class="tf">part 6: at the bottom of <b>undo.py</b>, the empty stack</p>
+    <pre>empty = Stack()
+empty.removeTop()</pre>
+    </div>
+    <table style="border-collapse:collapse;margin:8px 0">
+      <tr><th style="padding:4px 12px;border-bottom:1px solid #34405a" align="left">piece</th><th style="padding:4px 12px;border-bottom:1px solid #34405a" align="left">say</th></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a;white-space:nowrap"><code>_items</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">"The underscore means private: only the class's own methods touch it."</td></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a;white-space:nowrap"><code>append</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">"The end of the list is our <b>top</b>."</td></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a;white-space:nowrap"><code>pop()</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">"No number: takes the <b>last</b> item off and returns it."</td></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a;white-space:nowrap"><code>[-1]</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">"The last item, without removing it. That's peek."</td></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a;white-space:nowrap"><code>if not self._items</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">"An empty list counts as False. Nothing to remove, so we stop with a clear message."</td></tr>
+    </table>
+    <ul>
+      <li><code>from stacks import Stack</code>: "Use the class from stacks.py. The file name, without .py." Both files must be in the same folder.</li>
+      <li><b>Before running part 5, ask chat:</b> "What do the three prints show?" Then run: <code>change the colour</code>, <code>change the colour</code>, <code>make it bold</code>.</li>
+      <li>Say: "<code>removeTop</code> was our Ctrl+Z. Now the top is bold."</li>
+      <li>Part 6: run again. The output ends with <code>Exception: Stack is empty</code>. Say: "Read the traceback bottom up: our message, from <code>removeTop</code>, called from line …. That list of calls is itself a stack. Next slide."</li>
+    </ul>
+  </aside>
+</section>
+
+<section class="slide pad" data-seg="Code along: the call stack" data-at="14">
+  <h2>Python's own stack: the call stack <span class="say">call_stack.py</span></h2>
+  <div class="vscode" data-folder="stacks-and-queues" data-terminal="one" data-term-lines="10" data-cols="1fr" data-run="python3 call_stack.py">
+<script type="text/plain" data-file="call_stack.py" data-step>def a():
+    print("a starts")
+    b()
+    print("a ends")
+
+def b():
+    print("b starts")
+    c()
+    print("b ends")
+
+def c():
+    print("c starts")
+    print("c ends")
+
+a()</script>
+<script type="text/plain" data-file="call_stack.py" data-step data-mode="replace" data-find='print("c starts")'>print("c starts")
+    print(10 / 0)</script>
+  </div>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> We write call_stack.py: a calls b, b calls c. The finish order shows Python keeps calls on a stack, and a crash prints that stack.</p>
+    <p><b>** CODE ALONG, about 4 minutes. **</b> New file <code>call_stack.py</code>.</p>
+    <div class="typecode"><p class="th">TYPE THIS, in order</p>
+    <p class="tf"><b>call_stack.py</b> · part 1</p>
+    <pre>def a():
+    print("a starts")
+    b()
+    print("a ends")
+
+def b():
+    print("b starts")
+    c()
+    print("b ends")
+
+def c():
+    print("c starts")
+    print("c ends")
+
+a()</pre>
+    <p class="tf"><b>Ctrl+S</b>, then:</p><pre>python3 call_stack.py</pre>
+    <p class="tf">part 2: in <b>c</b>, under <code>print("c starts")</code>, add:</p>
+    <pre>    print(10 / 0)</pre>
+    </div>
+    <ul>
+      <li><b>Before running, ask chat:</b> "Which function <b>ends</b> first?" Then run: a starts, b starts, c starts, <b>c ends, b ends, a ends</b>.</li>
+      <li>Say: "a went on the stack first and came off last. c went on last and came off first. LIFO."</li>
+      <li>Part 2, run: <code>ZeroDivisionError: division by zero</code>. Point at <code>Traceback (most recent call last)</code>: "a, then b, then c, the newest at the bottom. That's the call stack at the moment it crashed."</li>
+      <li>Say: "No 'ends' lines printed: the error unwound the whole stack."</li>
+    </ul>
+  </aside>
+</section>
+
+<!-- ============ QUEUES (18–30) ============ -->
+<section class="slide" data-seg="Queues" data-at="18">
+  <h2>A queue: first in, first out (FIFO)</h2>
+  <p style="font-size:26px;margin:0 0 14px">Like a coffee shop line: join at the <b>back</b>, get served from the <b>front</b>. Nobody skips.</p>
+  <div class="boxes">
+    <div class="lbl">front →</div>
+    <div class="b"><div>Maria</div><span>[0]</span></div>
+    <div class="b"><div>Sam</div><span>[1]</span></div>
+    <div class="b"><div>Alex</div><span>[2]</span></div>
+    <div class="lbl">← back</div>
+  </div>
+  <ul class="small" style="margin-top:14px">
+    <li><code>addRight</code> joins at the back (right) · <code>removeLeft</code> serves the front (index 0)</li>
+    <li><b>Task scheduling</b> and <b>request handling</b> (in the order they arrive)</li>
+    <li><b>Message brokers</b> (messages wait their turn) · <b>Breadth-first search</b></li>
+  </ul>
+  <p class="bottomline">A queue is fair: the oldest item always goes next.</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> What a queue is: add at the back, take from the front, so the oldest item always goes next.</p>
+    <p>Point at the boxes: "This is the Python list inside our Queue. Index 0, Maria, is the front of the line. New people join on the right."</p>
+    <p>Common words: <b>enqueue</b> (join the line) and <b>dequeue</b> (leave the front). The curriculum calls them <code>addRight</code> and <code>removeLeft</code>; the homework uses <code>enqueue</code> and <code>dequeue</code>.</p>
+    <p>Breadth-first search comes back in a future lecture (trees). Just name it.</p>
+    <p>The curriculum's queue picture is on the class site (diagram gallery); this slide draws the same thing as the Python list.</p>
+  </aside>
+</section>
+
+<section class="slide pad" data-seg="Code along: a Queue class" data-at="20">
+  <h2>Build a Queue class <span class="say">queues.py · coffee.py</span></h2>
+  <div class="vscode" data-folder="stacks-and-queues" data-terminal="one" data-term-lines="6" data-cols="1fr 1fr" data-run="python3 coffee.py">
+<script type="text/plain" data-file="queues.py" data-step>class Queue:
+    def __init__(self):
+        self._items = []</script>
+<script type="text/plain" data-file="queues.py" data-step>
+    def addRight(self, item):
+        self._items.append(item)</script>
+<script type="text/plain" data-file="queues.py" data-step>
+    def removeLeft(self):
+        if not self._items:
+            raise Exception("Queue is empty")
+        return self._items.pop(0)</script>
+<script type="text/plain" data-file="queues.py" data-step>
+    def peek(self):
+        if not self._items:
+            raise Exception("Queue is empty")
+        return self._items[0]</script>
+<script type="text/plain" data-file="coffee.py" data-step>from queues import Queue
+
+line = Queue()
+line.addRight("Maria")
+line.addRight("Sam")
+line.addRight("Alex")
+print(line.peek())
+print(line.removeLeft())
+print(line.peek())</script>
+  </div>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> We write queues.py: a Queue class with addRight, removeLeft and peek. Then coffee.py serves a coffee line with it.</p>
+    <p><b>** CODE ALONG, about 5 minutes. **</b> New file <code>queues.py</code>. Say: "Almost the same as the stack. Watch the two lines that change."</p>
+    <div class="typecode"><p class="th">TYPE THIS, in order</p>
+    <p class="tf"><b>queues.py</b> · part 1: the class</p>
+    <pre>class Queue:
+    def __init__(self):
+        self._items = []</pre>
+    <p class="tf">part 2: addRight</p>
+    <pre>    def addRight(self, item):
+        self._items.append(item)</pre>
+    <p class="tf">part 3: removeLeft</p>
+    <pre>    def removeLeft(self):
+        if not self._items:
+            raise Exception("Queue is empty")
+        return self._items.pop(0)</pre>
+    <p class="tf">part 4: peek</p>
+    <pre>    def peek(self):
+        if not self._items:
+            raise Exception("Queue is empty")
+        return self._items[0]</pre>
+    <p class="tf">part 5: a new file, <b>coffee.py</b></p>
+    <pre>from queues import Queue
+
+line = Queue()
+line.addRight("Maria")
+line.addRight("Sam")
+line.addRight("Alex")
+print(line.peek())
+print(line.removeLeft())
+print(line.peek())</pre>
+    <p class="tf"><b>Ctrl+S</b> both files, then:</p><pre>python3 coffee.py</pre>
+    </div>
+    <ul>
+      <li>The two changes from the stack: <code>pop(0)</code> (take index 0, the front) and <code>[0]</code> (look at the front).</li>
+      <li><b>Before running, ask chat</b> for the three prints. Then run: <code>Maria</code>, <code>Maria</code>, <code>Sam</code>.</li>
+      <li>Say: "Same order in as the stack slide, opposite answer out."</li>
+      <li>Ask: "Is anything about <code>pop(0)</code> worrying, after the Big-O lecture?" → next slide.</li>
+    </ul>
+  </aside>
+</section>
+
+<section class="slide" data-seg="Queues" data-at="25">
+  <h2><code>pop(0)</code> is slow: everyone shifts left</h2>
+  <div class="boxes">
+    <div class="lbl">before</div>
+    <div class="b go"><div>Maria</div><span>[0]</span></div>
+    <div class="b"><div>Sam</div><span>[1]</span></div>
+    <div class="b"><div>Alex</div><span>[2]</span></div>
+    <div class="b"><div>Jo</div><span>[3]</span></div>
+  </div>
+  <div class="shift">← ← ← every item moves one seat</div>
+  <div class="boxes">
+    <div class="lbl">after</div>
+    <div class="b"><div>Sam</div><span>[0]</span></div>
+    <div class="b"><div>Alex</div><span>[1]</span></div>
+    <div class="b"><div>Jo</div><span>[2]</span></div>
+  </div>
+  <ul class="small" style="margin-top:14px">
+    <li><code>pop()</code> takes the last item: nothing moves, <b>O(1)</b></li>
+    <li><code>pop(0)</code> takes the first item: n − 1 items move, <b>O(n)</b></li>
+    <li>We use <code>pop(0)</code> on purpose: it keeps the queue easy to read. Real code uses <code>collections.deque</code> and <code>popleft()</code>: <b>O(1)</b></li>
+  </ul>
+  <p class="bottomline">Same answer, different cost. Fine for 10 people, slow for a million.</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Why pop(0) is slow: removing the first item makes every other item move one seat. We keep it anyway, to keep the class simple.</p>
+    <p>Point at the red box: "Maria leaves. A Python list has no empty seats, so Sam, Alex and Jo each move left. With a million people, that's a million moves to serve <b>one</b> person."</p>
+    <table style="border-collapse:collapse;margin:8px 0">
+      <tr><th style="padding:4px 12px;border-bottom:1px solid #34405a" align="left">call</th><th style="padding:4px 12px;border-bottom:1px solid #34405a" align="left">items that move</th><th style="padding:4px 12px;border-bottom:1px solid #34405a" align="left">Big-O</th></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a"><code>append(x)</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">none</td><td style="padding:4px 12px;border-bottom:1px solid #34405a"><b>O(1)</b></td></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a"><code>pop()</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">none</td><td style="padding:4px 12px;border-bottom:1px solid #34405a"><b>O(1)</b></td></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a"><code>pop(0)</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">all the others</td><td style="padding:4px 12px;border-bottom:1px solid #34405a"><b>O(n)</b></td></tr>
+      <tr><td style="padding:4px 12px;border-bottom:1px solid #34405a"><code>deque.popleft()</code></td><td style="padding:4px 12px;border-bottom:1px solid #34405a">none</td><td style="padding:4px 12px;border-bottom:1px solid #34405a"><b>O(1)</b></td></tr>
+    </table>
+    <p>Say: "We keep <code>pop(0)</code> today and in the homework so the class reads like the picture. Just know it's O(n). If you ever need a real queue in Python, use <code>deque</code>." Students may use either in the homework.</p>
+    <p>A <b>deque</b> ("deck") is a double-ended queue: fast to add or remove at <b>both</b> ends.</p>
+  </aside>
+</section>
+
+<section class="slide pad" data-seg="Code along: how slow?" data-at="27">
+  <h2>How slow is <code>pop(0)</code>? Time it <span class="say">speed.py</span></h2>
+  <div class="vscode" data-folder="stacks-and-queues" data-terminal="one" data-term-lines="6" data-cols="1fr" data-run="python3 speed.py">
+<script type="text/plain" data-file="speed.py" data-step>import time
+from collections import deque
+
+for n in [25_000, 50_000, 100_000]:
+    line = list(range(n))
+    start = time.perf_counter()
+    while line:
+        line.pop(0)
+    slow = time.perf_counter() - start</script>
+<script type="text/plain" data-file="speed.py" data-step>
+    line = deque(range(n))
+    start = time.perf_counter()
+    while line:
+        line.popleft()
+    fast = time.perf_counter() - start
+    print(f"{n:>7} people   pop(0): {slow:.3f}s   popleft: {fast:.3f}s")</script>
+  </div>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> We write speed.py: empty a long line with pop(0), then with a deque, and time both.</p>
+    <p><b>** CODE ALONG, about 3 minutes. **</b> New file <code>speed.py</code>. Students can watch instead of typing.</p>
+    <div class="typecode"><p class="th">TYPE THIS, in order</p>
+    <p class="tf"><b>speed.py</b> · part 1</p>
+    <pre>import time
+from collections import deque
+
+for n in [25_000, 50_000, 100_000]:
+    line = list(range(n))
+    start = time.perf_counter()
+    while line:
+        line.pop(0)
+    slow = time.perf_counter() - start</pre>
+    <p class="tf">part 2 (still inside the <code>for</code>, 4 spaces)</p>
+    <pre>
+    line = deque(range(n))
+    start = time.perf_counter()
+    while line:
+        line.popleft()
+    fast = time.perf_counter() - start
+    print(f"{n:&gt;7} people   pop(0): {slow:.3f}s   popleft: {fast:.3f}s")</pre>
+    <p class="tf"><b>Ctrl+S</b>, then:</p><pre>python3 speed.py</pre>
+    </div>
+    <ul>
+      <li><code>25_000</code>: the underscore is just for reading, like a comma. <code>time.perf_counter()</code> is a stopwatch in seconds.</li>
+      <li><code>while line:</code> runs until the line is empty (an empty list is False).</li>
+      <li><code>{slow:.3f}</code> prints 3 decimals. <code>{n:&gt;7}</code> lines the numbers up.</li>
+      <li>Say: "Seconds change from laptop to laptop. Look at the <b>pattern</b>: double the people, and <code>pop(0)</code> takes about <b>4 times</b> as long. <code>popleft</code> barely moves."</li>
+      <li>Why 4×: n people each cost about n moves → n × n. Twice the people → 4 times the work (the Big-O lecture's O(n²)).</li>
+      <li>The slide runs Python in the browser, so it's slower than a laptop. Real laptop numbers: see the RUNBOOK.</li>
+    </ul>
+  </aside>
+</section>
+
+<section class="slide" data-seg="Compare" data-at="30">
+  <h2>Same steps, different answers</h2>
+  <table class="dbt trace">
+    <tr><th>Step</th><th>Stack (bottom → top)</th><th>removeTop gives</th><th>Queue (front → back)</th><th>removeLeft gives</th></tr>
+    <tr><td>add A</td><td>A</td><td></td><td>A</td><td></td></tr>
+    <tr><td>add B</td><td>A B</td><td></td><td>A B</td><td></td></tr>
+    <tr><td>add C</td><td>A B C</td><td></td><td>A B C</td><td></td></tr>
+    <tr><td>remove</td><td>A B</td><td class="pk">C</td><td>B C</td><td class="fk">A</td></tr>
+    <tr><td>add D</td><td>A B D</td><td></td><td>B C D</td><td></td></tr>
+    <tr><td>remove</td><td>A B</td><td class="pk">D</td><td>C D</td><td class="fk">B</td></tr>
+  </table>
+  <p class="bottomline">The stack gave C, D. The queue gave A, B. Only the rule changed.</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Trace the same six steps on a stack and a queue, and see different items come out.</p>
+    <p><b>About 2 minutes.</b> Go row by row. On each <b>remove</b> row, ask chat first: "What comes out of the stack? Of the queue?"</p>
+    <p>Say: "This is how the activity and the homework want you to think: write the items in a row, and only touch the end the rule allows."</p>
+  </aside>
+</section>
+
+<section class="slide" data-seg="Compare" data-at="32">
+  <h2>Stack or queue: pick by "who goes next?"</h2>
+  <table class="dbt small">
+    <tr><th style="width:150px"></th><th>Stack</th><th>Queue</th></tr>
+    <tr><td>Next out</td><td class="pk">the <b>newest</b> item</td><td class="fk">the <b>oldest</b> item</td></tr>
+    <tr><td>Rule</td><td>LIFO / FILO</td><td>FIFO</td></tr>
+    <tr><td>Add</td><td><code>addTop</code> (push): <code>append</code> · O(1)</td><td><code>addRight</code> (enqueue): <code>append</code> · O(1)</td></tr>
+    <tr><td>Remove</td><td><code>removeTop</code> (pop): <code>pop()</code> · O(1)</td><td><code>removeLeft</code> (dequeue): <code>pop(0)</code> · <b>O(n)</b>, deque O(1)</td></tr>
+    <tr><td>Look</td><td><code>peek</code>: <code>[-1]</code> · O(1)</td><td><code>peek</code>: <code>[0]</code> · O(1)</td></tr>
+    <tr><td>Use when</td><td><b>recency</b> matters: undo, the call stack, backtracking</td><td><b>order</b> matters: jobs, requests, messages, BFS</td></tr>
+  </table>
+  <p class="bottomline">How data comes out matters as much as how it's stored.</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> One table comparing the two, so students can choose: newest next is a stack, oldest next is a queue.</p>
+    <p>Don't read it all. Point at the first row and the last row: "Ask who goes next. Newest: stack. Oldest: queue." That's the activity.</p>
+    <p>The words in brackets (push, pop, enqueue, dequeue) are the homework's method names.</p>
+  </aside>
+</section>
+
+<!-- ============ ACTIVITY (33–39) ============ -->
+<section class="slide activity" data-seg="Activity: Stack or Queue?" data-at="33">
+  <h2>Activity: Stack or Queue?</h2>
+  <div class="countdown" data-sec="360"></div>
+  <ol class="steps">
+    <li>A real situation appears</li>
+    <li>In chat on "go": <b>Stack</b> or <b>Queue</b>?</li>
+    <li>Then say why: who goes next, the newest or the oldest?</li>
+  </ol>
+  <p class="muted small" style="margin-top:24px">Page: activity-stack-or-queue/</p>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Activity: a real situation appears, and everyone answers Stack or Queue in the chat.</p>
+    <p>About 35 seconds a card; the first 6 are the core set. Space reveals. Answer key in the teacher guide.</p>
+    <p>Card 9 is the homework's string reversal: say "you'll build this tonight". Card 10 is Valid Parentheses: give the idea only.</p>
+  </aside>
+</section>
+
+<!-- ============ WRAP UP (39–42) ============ -->
+<section class="slide" data-seg="Wrap up" data-at="39">
+  <h2>The docs have the rest</h2>
+  <div class="cols" style="grid-template-columns: 0.75fr 1.5fr; gap:32px">
+    <div>
+      <ul class="small">
+        <li>The Python tutorial shows lists as <b>stacks</b> and as <b>queues</b></li>
+        <li>It says <code>pop(0)</code> is slow, and points to <code>deque</code></li>
+        <li><code>deque</code>: <code>append</code>, <code>popleft</code>, and both ends fast</li>
+      </ul>
+      <div class="card green" style="margin-top:18px; padding:16px 20px"><p style="font-size:24px; margin:0"><b>Homework tip:</b> before you code a method, ask which end of the list it touches.</p></div>
+    </div>
+    <div class="docs">
+      <div class="docs-tabs"><button type="button" data-src="https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks" class="on">Lists as stacks and queues</button><button type="button" data-src="https://docs.python.org/3/library/collections.html#deque-objects">collections.deque</button><a href="https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks" target="_blank" rel="noopener">Open ↗</a></div>
+      <iframe src="https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks" loading="lazy" title="Python tutorial: using lists as stacks and queues"></iframe>
+      <div class="url">https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks</div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Where to look things up: the Python tutorial shows both, and explains why a deque is the fast queue.</p>
+    <p><b>About 1 minute.</b> Show, don't read: on <b>Lists as stacks and queues</b>, point at the stack example (<code>append</code>, <code>pop</code>). Scroll a little to <b>Using Lists as Queues</b>: "lists are not efficient for this purpose … use collections.deque". "The docs agree with our timing."</p>
+    <p>Click <b>collections.deque</b>: point at <code>append</code> and <code>popleft</code>.</p>
+    <p>Say: "Nobody memorizes this. Look it up."</p>
+    <p><b>Arrow keys:</b> after you click inside the docs, the arrows scroll the docs. Click the slide <b>outside</b> the docs (or use the presenter's Next) to move on.</p>
+  </aside>
+</section>
+
+<section class="slide" data-seg="Wrap up" data-at="40">
+  <h2>Homework</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.1fr; gap:32px; align-items:start">
+    <div>
+      <p class="small" style="margin-bottom:10px">Top to bottom: each one is a little harder.</p>
+      <ol class="small" style="padding-left:1.2em">
+        <li><b>Data Structures I</b>: a full Stack and Queue, then reverse a string with your stack</li>
+        <li><b>Valid Parentheses</b> (LeetCode): does every bracket close in the right order?</li>
+      </ol>
+      <div class="card green" style="margin-top:20px; padding:16px 20px"><p style="font-size:22px; margin:0">Either end of the list can be the front of a queue. Add at one end, remove at the other.</p></div>
+    </div>
+    <table class="dbt names">
+      <tr><th>Today</th><th>The homework</th></tr>
+      <tr><td>addTop</td><td>push</td></tr>
+      <tr><td>removeTop</td><td>pop</td></tr>
+      <tr><td>addRight</td><td>enqueue</td></tr>
+      <tr><td>removeLeft</td><td>dequeue</td></tr>
+      <tr><td>peek</td><td>peek</td></tr>
+      <tr><td>(new)</td><td>size, is_empty</td></tr>
+    </table>
+  </div>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Walk through the homework, top to bottom, and match today's method names to the homework's.</p>
+    <p>Full steps on the class site (Homework): fork → clone → fill in <code>Stack.py</code> and <code>Queue.py</code> → test with prints → commit and push.</p>
+    <p>Point at the table: "Same ideas, the usual names. Two new ones: <code>size</code> (how many) and <code>is_empty</code> (True or False). You already have the list inside, so each is one line."</p>
+    <p>Say: "<code>Queue.py</code>'s comments add at the <b>beginning</b> and remove from the <b>end</b>. That's still FIFO, just facing the other way." <code>insert(0, x)</code> is also O(n), for the same reason as <code>pop(0)</code>.</p>
+    <p>Valid Parentheses: don't solve it. Hint only: "every opening bracket waits on a stack until its closing bracket arrives."</p>
+  </aside>
+</section>
+
+</div>
+<script>
+  // "The docs have the rest": the tab buttons switch the embedded page
+  document.querySelectorAll('.docs').forEach((d) => {
+    const frame = d.querySelector('iframe'), open = d.querySelector('.docs-tabs a'), url = d.querySelector('.url')
+    d.querySelectorAll('.docs-tabs button').forEach((b) => b.onclick = () => {
+      d.querySelectorAll('.docs-tabs button').forEach((x) => x.classList.toggle('on', x === b))
+      frame.src = open.href = url.textContent = b.dataset.src
+      b.blur()
+    })
+  })
+</script>
+<script src="../shared/deck.js?v=1"></script>
+<script src="../shared/codepad.js?v=1"></script>
+</body>
+</html>
