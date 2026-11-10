@@ -250,6 +250,21 @@ a()</pre>
 </section>
 
 <!-- ============ QUEUES (18–30) ============ -->
+<section class="slide callstack" data-seg="Code along: the call stack" data-at="17">
+  <h2>Watch the call stack</h2>
+  <div class="cstack"></div>
+  <aside class="notes">
+    <p class="plan"><b>The plan:</b> Replay the file we just ran, one step at a time: which function goes ON the stack, which one runs, and which comes OFF. Then the same with the crash.</p>
+    <p><b>About 2 minutes.</b> Press <b>N</b> to step (or click Next), <b>B</b> to go back. <b>Play</b> steps every 2 seconds. Pick <b>Run 1</b> or <b>Run 2</b> at the top.</p>
+    <ul>
+      <li><b>Run 1 (no error):</b> stop on step 6 (c on top) and ask: "Which comes off first?" Then keep going. Say: "c went on last and came off first. LIFO."</li>
+      <li>Point at the grey frames: "waiting" means that function is paused on the line that made the call. When the call above it comes off, it carries on from there.</li>
+      <li><b>Run 2 (10 / 0):</b> the frames turn red and come off one by one without finishing. On the last step, match the traceback to the frames: line 16, 3, 8, 13, the bottom of the stack first. "Most recent call last" means the top of the stack is at the bottom of the traceback.</li>
+      <li>The terminal lines are the real output from <code>python3 call_stack.py</code>. In your terminal the traceback shows the full path where this shows <code>...</code>.</li>
+    </ul>
+  </aside>
+</section>
+
 <section class="slide" data-seg="Queues" data-at="18">
   <h2>A queue: first in, first out (FIFO)</h2>
   <p style="font-size:26px;margin:0 0 14px">Like a coffee shop line: join at the <b>back</b>, get served from the <b>front</b>. Nobody skips.</p>
@@ -564,5 +579,6 @@ for n in [25_000, 50_000, 100_000]:
 </script>
 <script src="../shared/deck.js?v=1"></script>
 <script src="../shared/codepad.js?v=1"></script>
+<script src="../shared/callstack.js?v=1"></script>
 </body>
 </html>
